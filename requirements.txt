@@ -1,0 +1,9 @@
+# requirements.txt
+flask==2.2.3
+Werkzeug==2.2.3
+tensorflow==2.10.0
+numpy==1.24.4
+Pillow==9.5.0
+transformers==4.30.2
+torch==2.0.1
+timm==0.9.5
