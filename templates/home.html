@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Caption Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6a5acd;
+            --secondary-color: #4b0082;
+            --accent-color: #9370db;
+            --light-color: #f5f5f5;
+            --dark-color: #333;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-image: url('static/images/background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--light-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 30, 0.7);
+            z-index: -1;
+        }
+        
+        header {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 0;
+            position: relative;
+        }
+        
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            color: var(--accent-color);
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            font-size: 28px;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li a {
+            color: var(--light-color);
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links li a:hover,
+        .nav-links li a.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            flex: 1;
+        }
+        
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .upload-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            margin: 0 auto;
+            transition: transform 0.3s ease;
+            animation: slideUp 0.8s ease-out;
+        }
+        
+        .upload-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+        
+        .upload-area h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .upload-area p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .model-selection {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .model-selection-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .model-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .model-option {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .model-option:hover {
+            background: rgba(106, 90, 205, 0.3);
+        }
+        
+        .model-option input {
+            margin-right: 8px;
+        }
+        
+        .upload-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 200px;
+            margin: 0 auto;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .upload-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+        
+        .result-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .caption {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+        
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 0;
+            text-align: center;
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .footer-content p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .upload-container {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 30px 15px;
+            }
+            
+            .model-options {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <span>AI Caption Pro</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/" class="active">Home</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="hero">
+            <h1>AI Image Caption Generator</h1>
+            <p>Upload any image and our advanced deep learning models will generate a descriptive caption. Choose between three different architectures: CNN-BiLSTM, VGG19-LSTM, or BLIP.</p>
+        </div>
+
+        <div class="upload-container">
+            {% if error %}
+            <div class="alert alert-danger">
+                {{ get_flashed_messages()[0] }}
+            </div>
+            {% endif %}
+
+            <form action="{{ url_for('generate') }}" method="post" enctype="multipart/form-data">
+                <div class="upload-area" onclick="document.getElementById('file').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Upload Your Image</h3>
+                    <p>Click to browse or drag and drop your image here</p>
+                    <p>Supported formats: JPG, JPEG, PNG</p>
+                </div>
+                
+                <input type="file" name="file" id="file" class="file-input" accept=".jpg, .jpeg, .png" onchange="displayFileName(this)">
+                
+                <div class="model-selection">
+                    <label class="model-selection-title">Select Captioning Model:</label>
+                    <div class="model-options">
+                        <label class="model-option">
+                            <input type="radio" name="model_type" value="cnn_bilstm" checked>
+                            <span>CNN-BiLSTM</span>
+                            <div class="tooltip">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Uses InceptionV3 for feature extraction and a BiLSTM for generating captions.</span>
+                            </div>
+                        </label>
+                        <label class="model-option">
+                            <input type="radio" name="model_type" value="vgg19_lstm">
+                            <span>VGG19-LSTM</span>
+                            <div class="tooltip">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Uses VGG19 for feature extraction and an LSTM network for generating captions.</span>
+                            </div>
+                        </label>
+                        <label class="model-option">
+                            <input type="radio" name="model_type" value="blip">
+                            <span>BLIP</span>
+                            <div class="tooltip">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip-text">Bootstrapping Language-Image Pre-training - a more advanced model that often produces more natural captions.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="upload-btn">Generate Caption</button>
+            </form>
+
+            {% if success %}
+            <div class="result">
+                <img src="{{ url_for('static', filename=image) }}" alt="Uploaded Image" class="result-image" onerror="this.onerror=null; this.src='/static/images/image-error.png'; console.log('Image failed to load');">
+                <div class="caption">
+                    <i class="fas fa-quote-left" style="margin-right: 10px; color: var(--accent-color);"></i>
+                    {{ caption }}
+                    <i class="fas fa-quote-right" style="margin-left: 10px; color: var(--accent-color);"></i>
+                    {% if model_used %}
+                    <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8; text-align: right;">
+                        Generated by: {{ model_used }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 AI Caption Pro.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Create folder for uploads first time the app runs
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create uploads directory if it doesn't exist
+            fetch("{{ url_for('create_uploads') }}", { method: 'POST' })
+                .then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error creating uploads directory:', error));
+        });
+        
+        function displayFileName(input) {
+            const fileName = input.files[0].name;
+            const fileNameDisplay = document.createElement('p');
+            fileNameDisplay.textContent = `Selected: ${fileName}`;
+            fileNameDisplay.style.color = 'var(--accent-color)';
+            fileNameDisplay.style.marginTop = '10px';
+            fileNameDisplay.style.fontWeight = 'bold';
+            
+            // Remove any existing filename display
+            const existingDisplay = document.querySelector('.upload-area p:nth-child(4)');
+            if (existingDisplay) {
+                existingDisplay.remove();
+            }
+            
+            document.querySelector('.upload-area').appendChild(fileNameDisplay);
+        }
+
+        // Add drag and drop functionality
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = 'rgba(255, 255, 255, 0.1)';
+            uploadArea.style.borderColor = 'var(--accent-color)';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.background = 'transparent';
+            uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = 'transparent';
+            uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const fileInput = document.getElementById('file');
+                fileInput.files = e.dataTransfer.files;
+                displayFileName(fileInput);
+            }
+        });
+    </script>
+</body>
+</html>
